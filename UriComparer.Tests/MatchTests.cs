@@ -41,5 +41,12 @@ namespace UriComparer.Tests
             Uri uriToCompare = new Uri("https://example.com/Name?someValue=3");
             Assert.True(uriTemplate.Match(uriToCompare));
         }
+        [Fact]
+        public void CompareUrlWithWildCardAtEndOfUrlShouldBeTrue()
+        {
+            UriComparer uriTemplate = new UriComparer("https://example.com/auth/*");
+            Uri uriToCompare = new Uri("https://example.com/auth/loggin?user=john&password=123");
+            Assert.True(uriTemplate.Match(uriToCompare));
+        }
     }
 }

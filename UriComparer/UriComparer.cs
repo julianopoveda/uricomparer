@@ -15,7 +15,7 @@ namespace UriComparer
 
         public bool Match(Uri urlToCompare)
         {
-            return UriTemplate == urlToCompare;
+            return UriTemplate.ToString().Equals(urlToCompare.ToString(), StringComparison.InvariantCultureIgnoreCase);
         }
     }
 }

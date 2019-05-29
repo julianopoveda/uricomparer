@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace UriComparer
 {
@@ -67,9 +67,10 @@ namespace UriComparer
             for (int i = 0; i < queryPartCount && queryIsMatch; i++)
             {
                 queryIsMatch &= (queryPartsTemplate[i].Equals(queryPartsToCompare[i], StringComparison.InvariantCultureIgnoreCase));
-                if(!queryIsMatch)
-                {
-                    queryIsMatch = IsTemplateBracket(queryPartsTemplate[i]) && (!string.IsNullOrEmpty(queryPartsToCompare[i]) && !queryPartsToCompare[i].Equals(_slashCode));
+                if (!queryIsMatch && IsTemplateBracket(queryPartsTemplate[i]))
+                {                    
+                    string parameterName = queryPartsTemplate[i].Split("=")[0];
+                    queryIsMatch = queryPartsToCompare[i].IndexOf(parameterName, StringComparison.InvariantCultureIgnoreCase) >= 0;
                 }
             }
 
@@ -93,7 +94,7 @@ namespace UriComparer
                 {
                     if (templateSegment == "*")
                         return UriMatchLevel.AllSubUrlAllowed;
-                    
+
                     isMatch = IsTemplateBracket(templateSegment) && (!string.IsNullOrEmpty(urlToCompareSegments[i]) && !urlToCompareSegments[i].Equals(_slashCode));
                 }
             }
@@ -105,7 +106,7 @@ namespace UriComparer
         {
             int openCurlyBraces = templateSegment.IndexOf(_openCurlyBraceCode);
             int closeCurlyBraces = templateSegment.IndexOf(_closeCurlyBraceCode);
-            return openCurlyBraces >= 0 && closeCurlyBraces >= 0 && openCurlyBraces + _openCurlyBraceCode.Length < closeCurlyBraces;            
+            return openCurlyBraces >= 0 && closeCurlyBraces >= 0 && openCurlyBraces + _openCurlyBraceCode.Length < closeCurlyBraces;
         }
     }
 }

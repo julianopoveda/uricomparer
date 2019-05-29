@@ -129,6 +129,13 @@ namespace UriComparer.Tests
         }
 
         [Fact]
+        public void CompareUrlWithCurlyBracesAndWrongQueryParameterNameShouldBeFalse()
+        {
+            UriComparer uriTemplate = new UriComparer("https://example.com/controller/action?carname={name}");
+            Uri uriToCompare = new Uri("https://example.com/controller/action?someValue=3");
+            Assert.False(uriTemplate.Match(uriToCompare));
+        }
+        [Fact]
         public void CompareUrlWithCurlyBracesOnQueryAndUriCompareInThatSegmentIsEmptyShouldBeFalse()
         {
             UriComparer uriTemplate = new UriComparer("https://example.com/Name?somevalue=3&id={numberHere}");

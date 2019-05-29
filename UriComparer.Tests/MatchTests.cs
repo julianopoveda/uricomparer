@@ -41,12 +41,99 @@ namespace UriComparer.Tests
             Uri uriToCompare = new Uri("https://example.com/Name?someValue=3");
             Assert.True(uriTemplate.Match(uriToCompare));
         }
+
         [Fact]
         public void CompareUrlWithWildCardAtEndOfUrlShouldBeTrue()
         {
             UriComparer uriTemplate = new UriComparer("https://example.com/auth/*");
             Uri uriToCompare = new Uri("https://example.com/auth/loggin?user=john&password=123");
             Assert.True(uriTemplate.Match(uriToCompare));
+        }
+
+        [Fact]
+        public void CompareUrlWithCurlyBracesOnPathShouldBeTrue()
+        {
+            UriComparer uriTemplate = new UriComparer("https://example.com/{controller}?somevalue=3");
+            Uri uriToCompare = new Uri("https://example.com/Name?someValue=3");
+            Assert.True(uriTemplate.Match(uriToCompare));
+        }
+
+        [Fact]
+        public void CompareUrlWithCurlyBracesOnPathAndUriCompareInThatSegmentIsEmptyShouldBeFalse()
+        {
+            UriComparer uriTemplate = new UriComparer("https://example.com/{controller}?somevalue=3");
+            Uri uriToCompare = new Uri("https://example.com//nome?someValue=3");
+            Assert.False(uriTemplate.Match(uriToCompare));
+        }
+
+        [Fact]
+        public void CompareUrlWithOnlyCurlyBraceOpenOrCloseOnPathShouldBeFalse()
+        {
+            UriComparer uriTemplate = new UriComparer("https://example.com/{controller/action?somevalue=3");
+            Uri uriToCompare = new Uri("https://example.com/Name/action?someValue=3");
+            Assert.False(uriTemplate.Match(uriToCompare));
+
+            uriTemplate = new UriComparer("https://example.com/path}/action?somevalue=3");
+            Assert.False(uriTemplate.Match(uriToCompare));
+        }
+
+        [Fact]
+        public void CompareUrlWithInvertedCurlyBracesOnPathShouldBeFalse()
+        {
+            UriComparer uriTemplate = new UriComparer("https://example.com/}controller{/action?somevalue=3");
+            Uri uriToCompare = new Uri("https://example.com/Name/action?someValue=3");
+            Assert.False(uriTemplate.Match(uriToCompare));            
+        }
+
+        [Fact]
+        public void CompareUrlWithBlankCurlyBracesOnPathShouldBeFalse()
+        {
+            UriComparer uriTemplate = new UriComparer("https://example.com/{}/action?somevalue=3");
+            Uri uriToCompare = new Uri("https://example.com/Name/action?someValue=3");
+            Assert.False(uriTemplate.Match(uriToCompare));
+        }
+
+        [Fact]
+        public void CompareUrlWithCurlyBracesOnQueryShouldBeTrue()
+        {
+            UriComparer uriTemplate = new UriComparer("https://example.com/Name?somevalue=3&id={numberHere}");
+            Uri uriToCompare = new Uri("https://example.com/Name?someValue=3&id=19ad80fa-96de-4dad-8eb4-86c0e74e2306");
+            Assert.True(uriTemplate.Match(uriToCompare));
+        }
+
+        [Fact]
+        public void CompareUrlWithOnlyCurlyBraceOpenOrCloseOnQueryShouldBeFalse()
+        {
+            UriComparer uriTemplate = new UriComparer("https://example.com/controller/action?somevalue={number");
+            Uri uriToCompare = new Uri("https://example.com/controller/action?someValue=3");
+            Assert.False(uriTemplate.Match(uriToCompare));
+
+            uriTemplate = new UriComparer("https://example.com/controller/action?somevalue=here}");
+            Assert.False(uriTemplate.Match(uriToCompare));
+        }
+
+        [Fact]
+        public void CompareUrlWithInvertedCurlyBracesOnQueryShouldBeFalse()
+        {
+            UriComparer uriTemplate = new UriComparer("https://example.com/action?somevalue=}number{");
+            Uri uriToCompare = new Uri("https://example.com/action?someValue=3");
+            Assert.False(uriTemplate.Match(uriToCompare));
+        }
+
+        [Fact]
+        public void CompareUrlWithBlankCurlyBracesOnQueryShouldBeFalse()
+        {
+            UriComparer uriTemplate = new UriComparer("https://example.com/controller/action?somevalue={}");
+            Uri uriToCompare = new Uri("https://example.com/controller/action?someValue=3");
+            Assert.False(uriTemplate.Match(uriToCompare));
+        }
+
+        [Fact]
+        public void CompareUrlWithCurlyBracesOnQueryAndUriCompareInThatSegmentIsEmptyShouldBeFalse()
+        {
+            UriComparer uriTemplate = new UriComparer("https://example.com/Name?somevalue=3&id={numberHere}");
+            Uri uriToCompare = new Uri("https://example.com/Name?someValue=");
+            Assert.False(uriTemplate.Match(uriToCompare));
         }
     }
 }

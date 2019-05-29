@@ -4,6 +4,10 @@ namespace UriComparer
 {
     public class UriComparer
     {
+        private const string _openCurlyBraceCode = "%7B";
+        private const string _closeCurlyBraceCode = "%7D";
+        private const string _slashCode = "/";
+
         private enum UriMatchLevel : short
         {
             Match,
@@ -22,24 +26,34 @@ namespace UriComparer
 
         public bool Match(Uri urlToCompare)
         {
-            if (!UriTemplate.Authority.Equals(urlToCompare.Authority))
-                return false;
-
-            //here isMatch certainly is true;
-            UriMatchLevel isMatch = CompareSegments(UriTemplate.Segments, urlToCompare.Segments);
-
-            if (isMatch == UriMatchLevel.Match)
+            try
             {
-                bool queryIsMatch = UriTemplate.Query.Equals(urlToCompare.Query, StringComparison.InvariantCultureIgnoreCase);
-                if (queryIsMatch)
-                    return queryIsMatch;
+                if (!UriTemplate.Authority.Equals(urlToCompare.Authority))
+                    return false;
 
-                queryIsMatch = CompareQueries(UriTemplate.Query, urlToCompare.Query);
+                if (UriTemplate.AbsoluteUri.IndexOf("*") == UriTemplate.AbsoluteUri.Length - 1)
+                    return UriTemplate.IsBaseOf(urlToCompare);
 
-                return isMatch == UriMatchLevel.Match && queryIsMatch;
+                //here isMatch certainly is true;
+                UriMatchLevel isMatch = CompareSegments(UriTemplate.Segments, urlToCompare.Segments);
+
+                if (isMatch == UriMatchLevel.Match)
+                {
+                    bool queryIsMatch = UriTemplate.Query.Equals(urlToCompare.Query, StringComparison.InvariantCultureIgnoreCase);
+                    if (queryIsMatch)
+                        return queryIsMatch;
+
+                    queryIsMatch = CompareQueries(UriTemplate.Query, urlToCompare.Query);
+
+                    return isMatch == UriMatchLevel.Match && queryIsMatch;
+                }
+
+                return isMatch != UriMatchLevel.NotMatch;
             }
-
-            return isMatch != UriMatchLevel.NotMatch;
+            catch
+            {
+                throw;
+            }
         }
 
         private bool CompareQueries(string queryTemplate, string queryToCompare)
@@ -53,6 +67,10 @@ namespace UriComparer
             for (int i = 0; i < queryPartCount && queryIsMatch; i++)
             {
                 queryIsMatch &= (queryPartsTemplate[i].Equals(queryPartsToCompare[i], StringComparison.InvariantCultureIgnoreCase));
+                if(!queryIsMatch)
+                {
+                    queryIsMatch = IsTemplateBracket(queryPartsTemplate[i]) && (!string.IsNullOrEmpty(queryPartsToCompare[i]) && !queryPartsToCompare[i].Equals(_slashCode));
+                }
             }
 
             return queryIsMatch;
@@ -68,16 +86,26 @@ namespace UriComparer
 
             for (int i = 0; i < segmentsCount && isMatch; i++)
             {
-                isMatch &= (urlTemplateSegments[i].Equals(urlToCompareSegments[i], StringComparison.InvariantCultureIgnoreCase));
+                string templateSegment = urlTemplateSegments[i];
+                isMatch &= (templateSegment.Equals(urlToCompareSegments[i], StringComparison.InvariantCultureIgnoreCase));
+
                 if (!isMatch)
                 {
-                    isMatch = urlTemplateSegments[i] == "*";
-                    if (isMatch)
+                    if (templateSegment == "*")
                         return UriMatchLevel.AllSubUrlAllowed;
+                    
+                    isMatch = IsTemplateBracket(templateSegment) && (!string.IsNullOrEmpty(urlToCompareSegments[i]) && !urlToCompareSegments[i].Equals(_slashCode));
                 }
             }
 
             return isMatch ? UriMatchLevel.Match : UriMatchLevel.NotMatch;
+        }
+
+        private bool IsTemplateBracket(string templateSegment)
+        {
+            int openCurlyBraces = templateSegment.IndexOf(_openCurlyBraceCode);
+            int closeCurlyBraces = templateSegment.IndexOf(_closeCurlyBraceCode);
+            return openCurlyBraces >= 0 && closeCurlyBraces >= 0 && openCurlyBraces + _openCurlyBraceCode.Length < closeCurlyBraces;            
         }
     }
 }

@@ -4,6 +4,13 @@ namespace UriComparer
 {
     public class UriComparer
     {
+        private enum UriMatchLevel : short
+        {
+            Match,
+            NotMatch,
+            AllSubUrlAllowed
+        }
+
         public Uri UriTemplate { get; }
         public UriComparer(string uriTemplate)
         {
@@ -15,17 +22,50 @@ namespace UriComparer
 
         public bool Match(Uri urlToCompare)
         {
-            bool isMatch = UriTemplate.Authority.Equals(urlToCompare.Authority);
-            if (!isMatch)
+            if (!UriTemplate.Authority.Equals(urlToCompare.Authority))
                 return false;
 
-            string[] urlToCompareSegments = urlToCompare.Segments;
-            string[] urlTemplateSegments = UriTemplate.Segments;
+            //here isMatch certainly is true;
+            UriMatchLevel isMatch = CompareSegments(UriTemplate.Segments, urlToCompare.Segments);
 
+            if (isMatch == UriMatchLevel.Match)
+            {
+                bool queryIsMatch = UriTemplate.Query.Equals(urlToCompare.Query, StringComparison.InvariantCultureIgnoreCase);
+                if (queryIsMatch)
+                    return queryIsMatch;
+
+                queryIsMatch = CompareQueries(UriTemplate.Query, urlToCompare.Query);
+
+                return isMatch == UriMatchLevel.Match && queryIsMatch;
+            }
+
+            return isMatch != UriMatchLevel.NotMatch;
+        }
+
+        private bool CompareQueries(string queryTemplate, string queryToCompare)
+        {
+            string[] queryPartsTemplate = queryTemplate.Split("&");
+            string[] queryPartsToCompare = queryToCompare.Split("&");
+
+            int queryPartCount = queryPartsTemplate.Length > queryPartsTemplate.Length ? queryPartsTemplate.Length : queryPartsTemplate.Length;
+
+            bool queryIsMatch = true;
+            for (int i = 0; i < queryPartCount && queryIsMatch; i++)
+            {
+                queryIsMatch &= (queryPartsTemplate[i].Equals(queryPartsToCompare[i], StringComparison.InvariantCultureIgnoreCase));
+            }
+
+            return queryIsMatch;
+        }
+
+
+        //Maybe is better return a enum: Matches, NotMatch and AllSubUrlAllowed
+        private UriMatchLevel CompareSegments(string[] urlTemplateSegments, string[] urlToCompareSegments)
+        {
             int segmentsCount = urlToCompareSegments.Length > urlTemplateSegments.Length ? urlTemplateSegments.Length : urlToCompareSegments.Length;
 
+            bool isMatch = true;
 
-            //here isMatch certainly is true;
             for (int i = 0; i < segmentsCount && isMatch; i++)
             {
                 isMatch &= (urlTemplateSegments[i].Equals(urlToCompareSegments[i], StringComparison.InvariantCultureIgnoreCase));
@@ -33,31 +73,11 @@ namespace UriComparer
                 {
                     isMatch = urlTemplateSegments[i] == "*";
                     if (isMatch)
-                        return true;
+                        return UriMatchLevel.AllSubUrlAllowed;
                 }
             }
 
-            if (isMatch)
-            {
-                string[] urlTemplateQueryParts = UriTemplate.Query.Split("&");
-                string[] urlToCompareQueryParts = urlToCompare.Query.Split("&");
-
-                int queryPartCount = urlTemplateQueryParts.Length > urlTemplateQueryParts.Length ? urlTemplateQueryParts.Length : urlTemplateQueryParts.Length;
-                bool queryIsMatch = UriTemplate.Query.Equals(urlToCompare.Query, StringComparison.InvariantCultureIgnoreCase);
-                if (queryIsMatch)
-                    return queryIsMatch;
-
-                queryIsMatch = true;
-                for (int i = 0; i < queryPartCount && queryIsMatch; i++)
-                {
-                    queryIsMatch &= (urlTemplateQueryParts[i].Equals(urlToCompareQueryParts[i], StringComparison.InvariantCultureIgnoreCase));
-                }
-
-                return isMatch && queryIsMatch;
-            }
-
-            return isMatch;
+            return isMatch ? UriMatchLevel.Match : UriMatchLevel.NotMatch;
         }
-
     }
 }

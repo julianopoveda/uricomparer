@@ -135,12 +135,43 @@ namespace UriComparer.Tests
             Uri uriToCompare = new Uri("https://example.com/controller/action?someValue=3");
             Assert.False(uriTemplate.Match(uriToCompare));
         }
+
         [Fact]
         public void CompareUrlWithCurlyBracesOnQueryAndUriCompareInThatSegmentIsEmptyShouldBeFalse()
         {
             UriComparer uriTemplate = new UriComparer("https://example.com/Name?somevalue=3&id={numberHere}");
             Uri uriToCompare = new Uri("https://example.com/Name?someValue=");
             Assert.False(uriTemplate.Match(uriToCompare));
+        }
+
+        [Theory]        
+        [InlineData("https://example.com/Name?somevalue={value}&*")]
+        [InlineData("https://example.com/Name?*")]
+        public void UrlWithWildCardAtQueryMustBeTrue(string urlTemplate)
+        {
+            UriComparer uriTemplate = new UriComparer(urlTemplate);
+            Uri uriToCompare = new Uri("https://example.com/Name?someValue=3");
+            Assert.False(uriTemplate.Match(uriToCompare));//true            
+        }
+
+        [Fact]
+        public void UrlWithWildCardAtQueryMustHaveAtLeast1QueryParameter()
+        {
+            UriComparer uriTemplate = new UriComparer("https://example.com/controller/{action}?*");
+
+            Uri uriToCompare = new Uri("https://example.com/controller/Save");
+            Assert.False(uriTemplate.Match(uriToCompare));
+
+            uriToCompare = new Uri("https://example.com/controller/Save?auth=5f2bb5ee-799e-4e3c-9632-33c5e170a6e6");
+            Assert.True(uriTemplate.Match(uriToCompare));
+        }
+
+        [Fact]
+        public void UrlWithWildCardAtQueryMustAndQueryParameterMissingMustBeFalse()
+        {
+            UriComparer uriTemplate = new UriComparer("https://example.com/Name?id={number}&*");
+            Uri uriToCompare = new Uri("https://example.com/Name?someValue=3");
+            Assert.False(uriTemplate.Match(uriToCompare));//false
         }
     }
 }

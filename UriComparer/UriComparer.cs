@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace UriComparer
 {
@@ -31,7 +31,7 @@ namespace UriComparer
                 if (!UriTemplate.Authority.Equals(urlToCompare.Authority))
                     return false;
 
-                if (UriTemplate.AbsoluteUri.IndexOf("*") == UriTemplate.AbsoluteUri.Length - 1)
+                if (UriTemplate.AbsolutePath.IndexOf("*") == UriTemplate.AbsolutePath.Length - 1)
                     return UriTemplate.IsBaseOf(urlToCompare);
 
                 //here isMatch certainly is true;

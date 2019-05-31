@@ -1,0 +1,6 @@
+não vou prever * no texto da url por questões de complexidade
+no momento a ordem dos query parameters importa
+
+
+devo considerar * na query? Sim, pois posso ter parâmetros opcionais
+preciso prever validação de tipos nos brackets.
